@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Servicios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+    <h1>Servicios</h1>
+
+    <table class="min-w-full border border-gray-300">
+        <thead>
+            <tr>
+                <th class="border border-gray-300 px-4 py-2 bg-gray-200">Servicio</th>
+                <th class="border border-gray-300 px-4 py-2 bg-gray-200">Descripción</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for servicio in servicios %}
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">{{ servicio.nombre }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ servicio.descripcion }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
