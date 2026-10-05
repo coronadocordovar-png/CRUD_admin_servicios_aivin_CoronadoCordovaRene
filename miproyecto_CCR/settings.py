@@ -11,31 +11,53 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
-# pymysql: el conector que instalaste en el paso 02
 import pymysql
-# Hace que Django use pymysql como si fuera el driver oficial de MySQL para Python
+from decouple import config, Csv
+
+
+# =========================================================
+# PYMysql
+# =========================================================
+
+# Hace que Django use PyMySQL como controlador de MySQL
 pymysql.install_as_MySQLdb()
 
-# config: función de python-decouple que lee valores del archivo .env
-from decouple import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# =========================================================
+# RUTAS DEL PROYECTO
+# =========================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
+# =========================================================
+# CONFIGURACIÓN GENERAL
+# =========================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-blyg3z-3*wx^6x+p%u+kbdzn$d8)$ix(p$0#x((_!(ni+v1!^g'
+# La SECRET_KEY se obtiene desde .env en desarrollo
+# y desde las variables de entorno en Render.
+SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En desarrollo puede ser True.
+# En Render debe configurarse como False.
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# Hosts permitidos.
+# Ejemplo local:
+# ALLOWED_HOSTS=localhost,127.0.0.1
+#
+# En Render:
+# ALLOWED_HOSTS=nombre-del-servicio.onrender.com
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1',
+    cast=Csv()
+)
 
 
-# Application definition
+# =========================================================
+# APLICACIONES
+# =========================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,11 +66,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'core',
+
+    # Aplicación del proyecto
+    'core',
 ]
+
+
+# =========================================================
+# MIDDLEWARE
+# =========================================================
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
+    # WhiteNoise debe ir inmediatamente después
+    # de SecurityMiddleware.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -57,13 +91,26 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+# =========================================================
+# URLS
+# =========================================================
+
 ROOT_URLCONF = 'miproyecto_CCR.urls'
+
+
+# =========================================================
+# TEMPLATES
+# =========================================================
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+
         'DIRS': [],
+
         'APP_DIRS': True,
+
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -74,56 +121,80 @@ TEMPLATES = [
     },
 ]
 
+
+# =========================================================
+# WSGI
+# =========================================================
+
 WSGI_APPLICATION = 'miproyecto_CCR.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.1/ref/settings/#databases
+# =========================================================
+# BASE DE DATOS
+# =========================================================
 
-# (más abajo en el archivo, reemplazá el DATABASES que trae Django por defecto)
+# Conexión con MySQL/Aiven.
+# Los datos se obtienen del archivo .env localmente
+# o de las variables de entorno configuradas en Render.
+
 DATABASES = {
     'default': {
-        # ENGINE: qué motor de base de datos usar — mysql en vez del sqlite3 por defecto
+
+        # Motor MySQL
         'ENGINE': 'django.db.backends.mysql',
-        # NAME: nombre de la base de datos, leído de la variable DB_NAME del .env
+
+        # Nombre de la base de datos
         'NAME': config('DB_NAME'),
-        # USER: usuario de conexión, leído de DB_USER
+
+        # Usuario
         'USER': config('DB_USER'),
-        # PASSWORD: contraseña de conexión, leída de DB_PASSWORD
+
+        # Contraseña
         'PASSWORD': config('DB_PASSWORD'),
-        # HOST: servidor donde vive la base de datos, leído de DB_HOST
+
+        # Host de Aiven
         'HOST': config('DB_HOST'),
-        # PORT: puerto de conexión; default='3306' se usa solo si DB_PORT no está en el .env
+
+        # Puerto de Aiven
         'PORT': config('DB_PORT', default='3306'),
-        # OPTIONS: Aiven exige que la conexión venga cifrada (SSL)
-        'OPTIONS': {'ssl': {'ssl-mode': 'REQUIRED'}},
-    # cierre del diccionario de configuración de la conexión
+
+        # Conexión SSL requerida por Aiven
+        'OPTIONS': {
+            'ssl': {
+                'ssl-mode': 'REQUIRED',
+            }
+        },
     }
-# cierre del diccionario DATABASES
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
+# =========================================================
+# VALIDACIÓN DE CONTRASEÑAS
+# =========================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.1/topics/i18n/
+# =========================================================
+# INTERNACIONALIZACIÓN
+# =========================================================
 
 LANGUAGE_CODE = 'en-us'
 
@@ -134,17 +205,49 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.1/howto/static-files/
+# =========================================================
+# ARCHIVOS ESTÁTICOS
+# =========================================================
 
-STATIC_URL = 'static/'
+# URL para CSS, JavaScript, imágenes, etc.
+STATIC_URL = '/static/'
+
+# Carpeta donde collectstatic recopila todos
+# los archivos estáticos antes de publicar.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# =========================================================
+# WHITENOISE
+# =========================================================
 
-MAILERS = {
+# WhiteNoise comprime y versiona los archivos estáticos
+# para poder servirlos correctamente en producción.
+
+STORAGES = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+
+    'staticfiles': {
+        'BACKEND':
+        'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
+
+
+# =========================================================
+# EMAIL
+# =========================================================
+
+# Durante desarrollo los correos se muestran
+# directamente en la consola.
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+# =========================================================
+# DEFAULT PRIMARY KEY
+# =========================================================
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
