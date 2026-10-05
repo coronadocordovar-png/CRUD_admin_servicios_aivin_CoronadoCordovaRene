@@ -4,3 +4,4 @@ venv/
 .env
 # __pycache__/: archivos compilados que Python genera solo, no son código fuente
 __pycache__/
+staticfiles/
